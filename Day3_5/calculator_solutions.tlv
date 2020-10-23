@@ -23,10 +23,10 @@
    //$out[4:0] = $in1[3:0] + $in2[3:0];
    //$cnt[31:0] = $reset ? 0 : (1 + >>1$cnt);
    $out[31:0] = $op[1] ? ($op[0] ? $quot : $prod) : ($op[0] ? $diff : $sum);
+   $out = $reset ? 32'b0 : $out;
    
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = *cyc_cnt > 40;
    *failed = 1'b0;
 \SV
    endmodule
-
