@@ -47,7 +47,8 @@
          //$start = $reset ? 1'b0 : >>1$reset;
          //$valid = $reset ? 1'b0 : ($start ? $start : >>3$valid);
          $pc[31:0] = >>1$reset    ? 32'b0 :
-                     >>3$taken_br ? >>3$br_tgt_pc[31:0]:
+                     (>>3$taken_br || >>3$is_jal) ? >>3$br_tgt_pc[31:0]:
+                     >>3$is_jalr ? >>3$jalr_tgt_pc[31:0]:
                      >>3$is_load  ? >>3$inc_pc[31:0] : >>1$inc_pc[31:0];
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
          $imem_rd_en = $reset ? 1'b0 : 1'b1;
@@ -143,6 +144,8 @@
          $src1_value[31:0] = (>>1$rf_wr_en && (>>1$rd == $rs1)) ? >>1$result : $rf_rd_data1[31:0];
          $src2_value[31:0] = (>>1$rf_wr_en && (>>1$rd == $rs2)) ? >>1$result : $rf_rd_data2[31:0];
       @3 
+         $jalr_tgt_pc[31:0] = $src1_value + $imm;
+         
          $taken_br = $is_beq ? ($src1_value == $src2_value) :
                      $is_bne ? ($src1_value != $src2_value) :
                      $is_blt ? ($src1_value < $src2_value)^($src1_value[31]!= $src2_value[31]) :
