@@ -41,10 +41,10 @@
    |cpu
       @0
          $reset = *reset;
-         $start = $reset ? 1'b0 : >>1$reset;
-         $valid = $reset ? 1'b0 : ($start ? $start : >>3$valid);
+         //$start = $reset ? 1'b0 : >>1$reset;
+         //$valid = $reset ? 1'b0 : ($start ? $start : >>3$valid);
          $pc[31:0] = >>1$reset ? 32'b0 : 
-                     >>3$valid_taken_br ? >>3$br_tgt_pc : >>3$inc_pc[31:0];
+                     >>3$taken_br ? >>3$br_tgt_pc : >>1$inc_pc[31:0];
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
          $imem_rd_en = $reset ? 1'b0 : 1'b1;
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
@@ -118,7 +118,8 @@
                      $is_bltu ? ($src1_value < $src2_value) :
                      $is_bgeu ? ($src1_value > $src2_value) :
                      1'b0;
-         $valid_taken_br = $valid && $taken_br;
+         $valid = $reset ? 1'b0 : (>>1$taken_br ~| >>2$taken_br);            
+         //$valid_taken_br = $valid && $taken_br;
          $rf_wr_en = $rd_valid && |$rd && $valid;
          $rf_wr_index[4:0] = $rd;
          $result[31:0] = $is_addi ? $src1_value + $imm :
