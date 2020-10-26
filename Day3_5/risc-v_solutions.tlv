@@ -33,6 +33,9 @@
    m4_asm(BLT, r13, r12, 1111111111000) // If a3 is less than a2, branch to label named <loop>
    m4_asm(ADD, r10, r14, r0)            // Store final result to register a0 so that it can be read by main program
    
+   m4_asm(SW, r0, r10, 10000)
+   m4_asm(LW, r17, r0, 10000)
+   
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
@@ -44,8 +47,8 @@
          //$start = $reset ? 1'b0 : >>1$reset;
          //$valid = $reset ? 1'b0 : ($start ? $start : >>3$valid);
          $pc[31:0] = >>1$reset    ? 32'b0 :
-                     >>3$taken_br ? >>3$br_tgt_pc :
-                     >>3$is_load  ? >>3$inc_pc : >>1$inc_pc[31:0];
+                     >>3$taken_br ? >>3$br_tgt_pc[31:0]:
+                     >>3$is_load  ? >>3$inc_pc[31:0] : >>1$inc_pc[31:0];
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
          $imem_rd_en = $reset ? 1'b0 : 1'b1;
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
@@ -58,7 +61,7 @@
          $is_r_instr = $instr[6:2] ==? 5'b011x0 ||
                        $instr[6:2] ==? 5'b01011 ||
                        $instr[6:2] ==? 5'b10100;
-         $is_s_instr = $instr[6:2] ==? 5'b0000x;
+         $is_s_instr = $instr[6:2] ==? 5'b0100x;
          $is_b_instr = $instr[6:2] ==? 5'b11000;
          $is_j_instr = $instr[6:2] ==? 5'b11011;
          $is_u_instr = $instr[6:2] ==? 5'b0x101;
@@ -68,7 +71,7 @@
          $rs1_valid     = $is_i_instr || $is_s_instr || $is_b_instr || $is_r_instr;
          $rd_valid      = $is_i_instr || $is_u_instr || $is_j_instr || $is_r_instr;
          $funct7_valid  = $is_r_instr;
-         $funct3_valid     = $is_i_instr || $is_s_instr || $is_b_instr || $is_r_instr;
+         $funct3_valid  = $is_i_instr || $is_s_instr || $is_b_instr || $is_r_instr;
          ?$imm_valid
             $imm[31:0] = $is_i_instr ? { {21{$instr[31]}}, $instr[30:20]} :
                          $is_s_instr ? { {21{$instr[31]}}, $instr[30:25], $instr[11:7]} :
@@ -126,9 +129,10 @@
          $is_or = $dec_bits    ==? 11'b0_110_0110011;
          $is_and = $dec_bits   ==? 11'b0_111_0110011;
          
-         $br_tgt_pc[31:0] = $pc + $imm;
+         
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
       @2   
+         $br_tgt_pc[31:0] = $pc + $imm;
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_en2 = $rs2_valid;
          
@@ -146,9 +150,9 @@
                      $is_bltu ? ($src1_value < $src2_value) :
                      $is_bgeu ? ($src1_value > $src2_value) :
                      1'b0;
-         $valid = $reset ? 1'b0 : (>>1$taken_br ~| >>2$taken_br) || (>>1$is_load ~| >>2$is_load);
+         $valid = $reset ? 1'b0 : (>>1$taken_br ~| >>2$taken_br);
          //$valid_taken_br = $valid && $taken_br;
-         $rf_wr_en = $rd_valid && |$rd && $valid;
+         $rf_wr_en = >>2$is_load ? 1'b1 : $rd_valid && |$rd && $valid;
          $sltu_rslt[31:0] = $src1_value < $src2_value;
          $sltiu_rslt[31:0] = $src1_value < $imm;
          $result[31:0] = $is_andi     ? $src1_value & $imm :
@@ -177,10 +181,18 @@
                          $is_slti     ? (($src1_value[31] == $imm[31]) ? $sltiu_rslt : {31'b0, $src1_value[31]}):
                          $is_sra      ? { {32{$src1_value[31]}}, $src1_value} >> $src2_value[4:0]:
                          32'bx;
-         $rf_wr_index[4:0] = $valid ? $rd : >>2$rd;
-         $rf_wr_data[31:0] = $valid ? $result : >>2$ld_data;
+         $rf_wr_index[4:0] = >>2$is_load ? >>2$rd : $rd;
+         $rf_wr_data[31:0] = >>2$is_load ? >>2$dmem_rd_data[31:0] : $result;
          
-         *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
+         //$rf_wr_index[4:0] = $rd;
+         //$rf_wr_data[31:0] = $result;
+      @4   
+         $dmem_wr_en = $is_s_instr & $valid;
+         $dmem_rd_en = $is_load;
+         $dmem_addr[3:0] = $result[5:2];
+         $dmem_wr_data[31:0] = $src2_value;
+         
+         *passed = |cpu/xreg[17]>>5$value == (1+2+3+4+5+6+7+8+9);
 
 
       // YOUR CODE HERE
@@ -203,7 +215,7 @@
    |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
-      //m4+dmem(@4)    // Args: (read/write stage)
+      m4+dmem(@4)    // Args: (read/write stage)
    
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
