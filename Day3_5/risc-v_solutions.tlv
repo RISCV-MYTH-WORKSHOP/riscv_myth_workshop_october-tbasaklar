@@ -80,7 +80,7 @@
          ?$funct7_valid
             $funct7[6:0] = $instr[31:25];
          ?$funct3_valid
-            $funct3[2:0] = $instr[14:12];       
+            $funct3[2:0] = $instr[14:12];
          $opcode[6:0] = $instr[6:0];
          
          $dec_bits[10:0] = {$funct7[5], $funct3, $opcode};
@@ -95,6 +95,17 @@
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
          
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
+         
+         $rf_rd_en1 = $rs1_valid;
+         $rf_rd_en2 = $rs2_valid;
+         $rf_wr_en = $rd_valid;
+         $rf_wr_index[4:0] = $rd;
+         $rf_rd_index1[4:0] = $rs1;
+         $rf_rd_index2[4:0] = $rs2;
+         //$rf_wr_data[31:0] = {27'b0, $rs1};
+         
+         $src1_value[31:0] = $rf_rd_data1[31:0];
+         $src2_value[31:0] = $rf_rd_data2[31:0];
 
 
       // YOUR CODE HERE
@@ -116,7 +127,7 @@
    //  o CPU visualization
    |cpu
       m4+imem(@1)    // Args: (read stage)
-      //m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
    //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
