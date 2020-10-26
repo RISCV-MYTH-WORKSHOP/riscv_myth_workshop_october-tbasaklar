@@ -93,7 +93,7 @@
          $is_auipc = $dec_bits ==? 11'bxxxx_0010111;
          $is_jal = $dec_bits   ==? 11'bxxxx_1101111;
          
-         $is_jalb = $dec_bits  ==? 11'bx_000_1100111;
+         $is_jalr = $dec_bits  ==? 11'bx_000_1100111;
          $is_beq = $dec_bits   ==? 11'bx_000_1100011;
          $is_bne = $dec_bits   ==? 11'bx_001_1100011;
          $is_blt = $dec_bits   ==? 11'bx_100_1100011;
