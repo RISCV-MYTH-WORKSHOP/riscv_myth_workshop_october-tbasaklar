@@ -40,7 +40,8 @@
    |cpu
       @0
          $reset = *reset;
-         $pc[31:0] = >>1$reset ? 32'b0 : >>1$inc_pc[31:0];
+         $pc[31:0] = >>1$reset ? 32'b0 : 
+                     >>1$taken_br ? >>1$br_tgt_pc : >>1$inc_pc[31:0];
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
          $imem_rd_en = $reset ? 1'b0 : 1'b1;
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
@@ -93,9 +94,7 @@
          
          $is_add = $dec_bits ==? 11'b0_000_0110011;
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
-         
-         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
-         
+                
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_en2 = $rs2_valid;
          
@@ -107,10 +106,22 @@
          $src1_value[31:0] = $rf_rd_data1[31:0];
          $src2_value[31:0] = $rf_rd_data2[31:0];
          
+         $taken_br = $is_beq ? ($src1_value == $src2_value) :
+                     $is_bne ? ($src1_value != $src2_value) :
+                     $is_blt ? ($src1_value < $src2_value)^($src1_value[31]!= $src2_value[31]) :
+                     $is_bge ? ($src1_value > $src2_value)^($src1_value[31]!= $src2_value[31]) :
+                     $is_bltu ? ($src1_value < $src2_value) :
+                     $is_bgeu ? ($src1_value > $src2_value) :
+                     1'b0;
+         
+         $br_tgt_pc[31:0] = $pc + $imm;
+         
          $result[31:0] = $is_addi ? $src1_value + $imm :
                          $is_add  ? $src1_value + $src2_value :
                          32'bx;
          $rf_wr_data[31:0] = $result;
+         
+         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
 
 
       // YOUR CODE HERE
