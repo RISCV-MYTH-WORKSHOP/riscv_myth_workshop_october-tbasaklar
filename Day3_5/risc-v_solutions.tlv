@@ -149,8 +149,31 @@
          //$valid_taken_br = $valid && $taken_br;
          $rf_wr_en = $rd_valid && |$rd && $valid;
          $rf_wr_index[4:0] = $rd;
-         $result[31:0] = $is_addi ? $src1_value + $imm :
-                         $is_add  ? $src1_value + $src2_value :
+         $sltu_rslt[31:0] = $src1_value < $src2_value;
+         $sltiu_rslt[31:0] = $src1_value < $imm;
+         $result[31:0] = $is_andi  ? $src1_value & $imm :
+                         $is_ori   ? $src1_value | $imm :
+                         $is_xori  ? $src1_value ^ $imm :
+                         $is_addi  ? $src1_value + $imm :
+                         $is_slli  ? $src1_value << $imm[5:0] :
+                         $is_srli  ? $src1_value >> $imm[5:0] :
+                         $is_and   ? $src1_value & $src2_value :
+                         $is_or    ? $src1_value | $src2_value :
+                         $is_xor   ? $src1_value ^ $src2_value :
+                         $is_add   ? $src1_value + $src2_value :
+                         $is_sub   ? $src1_value - $src2_value :
+                         $is_sll   ? $src1_value << $src2_value[4:0] :
+                         $is_srl   ? $src1_value >> $src2_value[4:0] :
+                         $is_sltu  ? $sltu_rslt :
+                         $is_sltiu ? $sltiu_rslt :
+                         $is_lui   ? {$imm[31:12],12'b0}:
+                         $is_auipc ? $pc + $imm :
+                         $is_jal   ? $pc + 4 :
+                         $is_jalr  ? $pc + 4 :
+                         $is_srai  ? { {32{$src1_value[31]}}, $src1_value} >> $imm[4:0]:
+                         $is_slt   ? (($src1_value[31] == $src2_value[31]) ? $sltu_rslt : {31'b0, $src1_value[31]}):
+                         $is_slti  ? (($src1_value[31] == $imm[31]) ? $sltiu_rslt : {31'b0, $src1_value[31]}):
+                         $is_sra  ? { {32{$src1_value[31]}}, $src1_value} >> $src2_value[4:0]:
                          32'bx;
          $rf_wr_data[31:0] = $result;
          
