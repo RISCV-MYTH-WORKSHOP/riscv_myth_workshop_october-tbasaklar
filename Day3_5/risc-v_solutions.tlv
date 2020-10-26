@@ -122,7 +122,7 @@
          $rf_wr_data[31:0] = $result;
          
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
-         *passed = |cpu/xreg[10]>>5 == (1+2+3+4+5+6+7+8+9);
+         *passed = |cpu/xreg[10]>>5$value(1+2+3+4+5+6+7+8+9);
 
 
       // YOUR CODE HERE
@@ -147,7 +147,7 @@
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   //+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
