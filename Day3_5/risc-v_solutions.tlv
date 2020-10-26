@@ -98,18 +98,19 @@
          
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_en2 = $rs2_valid;
-         $rf_wr_en = $rd_valid;
+         
+         $rf_wr_en = $rd_valid & |$rd;
          $rf_wr_index[4:0] = $rd;
          $rf_rd_index1[4:0] = $rs1;
          $rf_rd_index2[4:0] = $rs2;
-         //$rf_wr_data[31:0] = {27'b0, $rs1};
          
          $src1_value[31:0] = $rf_rd_data1[31:0];
          $src2_value[31:0] = $rf_rd_data2[31:0];
          
          $result[31:0] = $is_addi ? $src1_value + $imm :
-                         $is_add  ? $src1_value + $src_value2 :
+                         $is_add  ? $src1_value + $src2_value :
                          32'bx;
+         $rf_wr_data[31:0] = $result;
 
 
       // YOUR CODE HERE
@@ -134,7 +135,7 @@
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
