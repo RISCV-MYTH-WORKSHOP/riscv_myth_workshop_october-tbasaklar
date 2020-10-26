@@ -44,7 +44,7 @@
          $start = $reset ? 1'b0 : >>1$reset;
          $valid = $reset ? 1'b0 : ($start ? $start : >>3$valid);
          $pc[31:0] = >>1$reset ? 32'b0 : 
-                     >>1$taken_br ? >>1$br_tgt_pc : >>1$inc_pc[31:0];
+                     >>3$valid_taken_br ? >>3$br_tgt_pc : >>3$inc_pc[31:0];
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
          $imem_rd_en = $reset ? 1'b0 : 1'b1;
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
@@ -97,11 +97,11 @@
          
          $is_add = $dec_bits ==? 11'b0_000_0110011;
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
-                
+         
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_en2 = $rs2_valid;
          
-         $rf_wr_en = $rd_valid & |$rd;
+         $rf_wr_en = $rd_valid && |$rd && $valid;
          $rf_wr_index[4:0] = $rd;
          $rf_rd_index1[4:0] = $rs1;
          $rf_rd_index2[4:0] = $rs2;
@@ -116,6 +116,7 @@
                      $is_bltu ? ($src1_value < $src2_value) :
                      $is_bgeu ? ($src1_value > $src2_value) :
                      1'b0;
+         $valid_taken_br = $valid && $taken_br;
          
          $br_tgt_pc[31:0] = $pc + $imm;
          
