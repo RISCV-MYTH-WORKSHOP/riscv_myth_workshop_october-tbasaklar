@@ -92,6 +92,7 @@
             $funct3[2:0] = $instr[14:12];
          $opcode[6:0] = $instr[6:0];
          
+      @2   
          $dec_bits[10:0] = {$funct7[5], $funct3, $opcode};
          
          $is_lui = $dec_bits   ==? 11'bxxxx_0110111;
@@ -130,9 +131,6 @@
          $is_or = $dec_bits    ==? 11'b0_110_0110011;
          $is_and = $dec_bits   ==? 11'b0_111_0110011;
          
-         
-         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
-      @2   
          $br_tgt_pc[31:0] = $pc + $imm;
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_en2 = $rs2_valid;
