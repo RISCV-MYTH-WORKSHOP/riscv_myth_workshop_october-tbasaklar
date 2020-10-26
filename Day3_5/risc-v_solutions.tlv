@@ -37,9 +37,12 @@
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
 
+   
    |cpu
       @0
          $reset = *reset;
+         $start = $reset ? 1'b0 : >>1$reset;
+         $valid = $reset ? 1'b0 : ($start ? $start : >>3$valid);
          $pc[31:0] = >>1$reset ? 32'b0 : 
                      >>1$taken_br ? >>1$br_tgt_pc : >>1$inc_pc[31:0];
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
