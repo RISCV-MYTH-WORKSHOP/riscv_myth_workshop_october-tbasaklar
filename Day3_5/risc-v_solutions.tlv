@@ -122,6 +122,7 @@
          $rf_wr_data[31:0] = $result;
          
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_add $is_addi);
+         *passed = |cpu/xreg[10]>>5 == (1+2+3+4+5+6+7+8+9);
 
 
       // YOUR CODE HERE
@@ -133,7 +134,7 @@
 
    
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = *cyc_cnt > 40;
+   //*passed = *cyc_cnt > 40;
    *failed = 1'b0;
    
    // Macro instantiations for:
